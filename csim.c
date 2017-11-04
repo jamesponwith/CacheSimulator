@@ -22,7 +22,7 @@ void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per
  * @param executable_name Strign containing the name of the executable.
  */
 void usage(char *executable_name) {
-	printf("Usage: %s [-hv] -s <s> -E <E> -b <b> -t <tracefile>", executable_name);
+	printf("Usage: %s [-hv] -s <s> -E <E> -b <b> -t <tracefile>\n", executable_name);
 }
 
 int main(int argc, char *argv[]) {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	int num_sets = 2;
 	char *trace_filename = NULL;
 	
-	int opterr = 0;
+	opterr = 0;
 
 	// TODO: update this to support the h, b, and E options
 	int c = -1;
