@@ -1,7 +1,7 @@
 COMP 280 - Project 05 (Cache Simulator)
 
-1. Partner 1:
-   Partner 2:
+1. Partner 1: Patrick Hall	
+   Partner 2: James Ponwith
 
 2. Total Hours Spent on Project:
 

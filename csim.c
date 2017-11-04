@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+//#include <getopt.h>
 #include "cachelab.h"
 
 typedef unsigned long int mem_addr;
@@ -30,15 +31,18 @@ int main(int argc, char *argv[]) {
 	int num_sets = 2;
 	char *trace_filename = NULL;
 	
-	opterr = 0;
+	int opterr = 0;
 
 	// TODO: update this to support the h, b, and E options
 	int c = -1;
 
 	// Note: adding a colon after the letter states that this option should be
 	// followed by an additional value (e.g. "-s 1")
-	while ((c = getopt(argc, argv, "vs:E:b:t:")) != -1) {
+	while ((c = getopt(argc, argv, "hvs:E:b:t:")) != -1) {
 		switch (c) {
+			case 'h':
+				usage("csim");
+				break;
 			case 'v':
 				// enable verbose mode
 				verbose_mode = 1;
