@@ -97,6 +97,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
+	
+	// Create function 
+
 
     printSummary(hit_count, miss_count, eviction_count);
 }
