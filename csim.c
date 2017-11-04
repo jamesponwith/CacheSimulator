@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
 	// Note: adding a colon after the letter states that this option should be
 	// followed by an additional value (e.g. "-s 1")
-	while ((c = getopt(argc, argv, "vs:t:")) != -1) {
+	while ((c = getopt(argc, argv, "vs:E:b:t:")) != -1) {
 		switch (c) {
 			case 'v':
 				// enable verbose mode
@@ -48,6 +48,12 @@ int main(int argc, char *argv[]) {
 				// Note: optarg is set by getopt to the string that follows
 				// this option (e.g. "-s 2" would assign optarg to the string "2")
 				num_sets = 1 << strtol(optarg, NULL, 10);
+				break;
+			case 'E':
+				// specify number of lines per set		
+				break;
+			case 'b':
+				// specify the number of block bits	
 				break;
 			case 't':
 				// specify the trace filename
