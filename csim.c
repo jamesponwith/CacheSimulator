@@ -8,10 +8,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <getopt.h>
 #include "cachelab.h"
 
+typedef struct Line Line;
 typedef unsigned long int mem_addr;
+
+struct Line {
+	unsigned int valid;
+	unsigned int tag;
+	unsigned int block_off;
+	unsigned int num_bits;
+	unsigned int lru;
+	// other fields
+};
+
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
@@ -29,6 +39,8 @@ int main(int argc, char *argv[]) {
 
 	int verbose_mode = 0;
 	int num_sets = 2;
+	//int lines_per_set;
+	//int block_size;
 	char *trace_filename = NULL;
 	
 	opterr = 0;
@@ -41,6 +53,7 @@ int main(int argc, char *argv[]) {
 	while ((c = getopt(argc, argv, "hvs:E:b:t:")) != -1) {
 		switch (c) {
 			case 'h':
+				// enable helper mode
 				usage("csim");
 				break;
 			case 'v':
@@ -55,6 +68,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'E':
 				// specify number of lines per set		
+				//lines_per_set = 1 << strtol(optarg, NULL, 10);
 				break;
 			case 'b':
 				// specify the number of block bits	
@@ -107,9 +121,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
+	FILE *tf = fopen(trace_file, "r");	
 	
 	// Create function 
-
-
     printSummary(hit_count, miss_count, eviction_count);
 }
+
