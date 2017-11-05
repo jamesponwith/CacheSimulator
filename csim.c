@@ -19,7 +19,6 @@ struct Line {
 	unsigned int block_off;
 	unsigned int num_bits;
 	unsigned int lru;
-	// other fields
 };
 
 
@@ -72,6 +71,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'b':
 				// specify the number of block bits	
+				// block_size = 1 << strtol(optarg, NULL, 10);
 				break;
 			case 't':
 				// specify the trace filename
@@ -121,9 +121,14 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
-	FILE *tf = fopen(trace_file, "r");	
+	FILE *fp = fopen(trace_file, "r");
+  	if ((fp) == NULL) {
+		printf("No such file\n");
+		exit(1);
+	}	
 	
 	// Create function 
     printSummary(hit_count, miss_count, eviction_count);
 }
+
 
