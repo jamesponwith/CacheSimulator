@@ -16,10 +16,13 @@ typedef unsigned long int mem_addr;
 typedef struct {
 	unsigned int valid;
 	mem_addr tag;
-	unsigned int lru;
-	unsigned int block_off;
 } Line;
 
+typedef struct {
+	int set_index;
+	int lru;	
+	Line* line;
+} Set;
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
@@ -130,6 +133,8 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 		printf("No such file\n");
 		exit(1);
 	}	
+
+
 
 	
 	
