@@ -10,16 +10,15 @@
 #include <unistd.h>
 #include "cachelab.h"
 
-typedef struct Line Line;
+//typedef struct Line Line;
 typedef unsigned long int mem_addr;
 
-struct Line {
+typedef struct {
 	unsigned int valid;
-	unsigned int tag;
-	unsigned int block_off;
-	unsigned int num_bits;
+	mem_addr tag;
 	unsigned int lru;
-};
+	unsigned int block_off;
+} Line;
 
 
 // forward declaration
@@ -67,11 +66,11 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'E':
 				// specify number of lines per set		
-				//lines_per_set = 1 << strtol(optarg, NULL, 10);
+				//lines_per_set = strtol(optarg, NULL, 10);
 				break;
 			case 'b':
 				// specify the number of block bits	
-				// block_size = 1 << strtol(optarg, NULL, 10);
+				//block_size = 1 << strtol(optarg, NULL, 10);
 				break;
 			case 't':
 				// specify the trace filename
@@ -93,8 +92,9 @@ int main(int argc, char *argv[]) {
 		printf("Trace filename: %s\n", trace_filename);
 		printf("Number of sets: %d\n", num_sets);
 	}
-
+	
 	simulateCache(trace_filename, num_sets, 2, 1, verbose_mode);
+	//simulateCache(trace_filename, num_sets, 2, lines_per_set, verbose_mode);
 
     return 0;
 }
@@ -121,11 +121,17 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
+	
+	printf("Set Index Bits %d\n", num_sets);
+	printf("Block Size %d\n", block_size);
+	printf("Lines Per Set %d\n", lines_per_set);
 	FILE *fp = fopen(trace_file, "r");
   	if ((fp) == NULL) {
 		printf("No such file\n");
 		exit(1);
 	}	
+
+	
 	
 	// Create function 
     printSummary(hit_count, miss_count, eviction_count);
