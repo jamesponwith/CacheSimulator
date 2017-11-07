@@ -128,6 +128,8 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	int hit_count = 0;
 	int miss_count = 0;
 	int eviction_count = 0;
+
+	// Variables for reading in the lines	
 	int size;
 	char instr;
 	mem_addr addr;
@@ -139,18 +141,50 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	printf("Block Size %d\n", block_size);
 	printf("Lines Per Set %d\n", lines_per_set);
 
+	// Dynamically allocate space for the Cache object 
 	Cache *cache = malloc(sizeof(Cache));
 	createCache(cache, num_sets, block_size, lines_per_set);
 
 	FILE *fp = openFile(trace_file);
 	
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
+		int to_evict = 0;
+		if(instr != 'I') { //we don't do anything if the instructio is 'I'
+			//calculate the address tag and set index
+			//
+			for(int i = 0; i < lines_per_set; i++) {
+				if (NULL/* the set we are in is valid*/) {
+					if (NULL/* check if tag is a hit */){
+						// check if tag is a hit
+						// increment hit count
+						// maybe something else
+						// update the timestamp for LRU
+						// WE HAVE A HIT
+					}
+					else if (NULL/*check if least recently used*/) {
+						// set this one to least recently used
+						// set this one to evict
+					}
+				}
+				else if (NULL /* empty == -1 */) {
+					//empty = i
+				}
+			}
+
+			if (NULL/* WE HAVE A HIT */) {
+
+			}
+		}		
+
 	}	
 	
 	printf("%lu\n", sizeof(cache));
 	free(cache);
     printSummary(hit_count, miss_count, eviction_count);
 }
+
+
+
 /**
  * Open a file and return a poniter to it
  * Has logic to exit program if file does not exist
