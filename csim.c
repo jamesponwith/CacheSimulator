@@ -21,8 +21,12 @@ typedef struct {
 typedef struct {
 	int set_index;
 	int lru;	
-	Line* line;
+	Line* lines;
 } Set;
+
+typedef struct {
+	Set* sets;
+} Cache;
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
@@ -135,8 +139,6 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	}	
 
 
-
-	
 	
 	// Create function 
     printSummary(hit_count, miss_count, eviction_count);
