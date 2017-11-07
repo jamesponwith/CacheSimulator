@@ -1,4 +1,4 @@
-/*
+/*	
  * csim.c
  *
  * Fill in file header comment with your name(s) and a short paragraph about
@@ -19,8 +19,6 @@ typedef struct {
 } Line;
 
 typedef struct {
-	int set_index;
-	int lru;	
 	Line* lines;
 } Set;
 
@@ -30,6 +28,7 @@ typedef struct {
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
+Cache createCache(int num_sets, int block_size, int lines_per_set);
 
 /**
  * Prints out a reminder of how to run the program.
@@ -41,15 +40,13 @@ void usage(char *executable_name) {
 }
 
 int main(int argc, char *argv[]) {
-
 	int verbose_mode = 0;
 	int num_sets = 2;
-	//int lines_per_set;
-	//int block_size;
+	int lines_per_set = 1;
+	int block_size = 1;
 	char *trace_filename = NULL;
 	
 	opterr = 0;
-
 	// TODO: update this to support the h, b, and E options
 	int c = -1;
 
@@ -100,9 +97,15 @@ int main(int argc, char *argv[]) {
 		printf("Number of sets: %d\n", num_sets);
 	}
 	
-	simulateCache(trace_filename, num_sets, 2, 1, verbose_mode);
-	//simulateCache(trace_filename, num_sets, 2, lines_per_set, verbose_mode);
-
+	//simulateCache(trace_filename, num_sets, 2, li1, verbose_mode);
+	simulateCache(trace_filename, num_sets, block_size, lines_per_set, verbose_mode);
+	/**
+	 * Sets: 2
+	 * Lines: 1
+	 * Block: 2
+	 */
+	//simulateCache(trace_filename, 2, 2, 1, verbose_mode);
+	
     return 0;
 }
 
@@ -128,20 +131,55 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
-	
 	printf("Set Index Bits %d\n", num_sets);
 	printf("Block Size %d\n", block_size);
 	printf("Lines Per Set %d\n", lines_per_set);
+
 	FILE *fp = fopen(trace_file, "r");
   	if ((fp) == NULL) {
 		printf("No such file\n");
 		exit(1);
 	}	
-
-
 	
+	Cache cache = createCache(num_sets, block_size, lines_per_set);
+	
+	printf("%lu\n", sizeof(cache));
+	//test the cache creation 
 	// Create function 
     printSummary(hit_count, miss_count, eviction_count);
 }
 
+/**
+ * Dynamically creates a cache with the specified organization (S, E, B)
+ * from the given inputs
+ *
+ * @param cache A pointer to a Cache struct
+ * @param num_sets Number of sets in the simulator.
+ * @param block_size Number of bytes in each cache block.
+ * @param lines_per_set Number of lines in each cache set.
+ */
+Cache createCache(int num_sets, int block_size, int lines_per_set) {
+	Cache cache;
+	cache.sets = malloc(sizeof(Set) * num_sets);
+	for (int i = 0; i < num_sets; i++) {
+		cache.sets[i].lines = malloc(lines_per_set * sizeof(Line));
+	}
+	return cache;
+}
 
+/*
+typedef struct {
+	unsigned int valid;
+	mem_addr tag;
+} Line;
+
+typedef struct {
+	int set_index;
+	int lru;	
+	Line* lines;
+} Set;
+
+typedef struct {
+	Set* sets;
+} Cache;
+*/
