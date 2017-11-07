@@ -177,11 +177,8 @@ FILE* openFile(char* trace_file) {
  * @param lines_per_set Number of lines in each cache set.
  */
 void createCache(Cache *cache, int num_sets, int block_size, int lines_per_set) {
-	//cache->sets = malloc(num_sets * sizeof(Set));
-	
 	cache->sets = calloc(num_sets, sizeof(Set));
 	for (int i = 0; i < num_sets; i++) {
-		//cache->sets[i].lines = malloc(lines_per_set * sizeof(Line));
 		cache->sets[i].lines = calloc(lines_per_set, sizeof(Line));
 	}
 }
