@@ -198,8 +198,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	}	
 	
 	printf("%lu\n", sizeof(cache));
-	free(cache);
     printSummary(hit_count, miss_count, eviction_count);
+	fclose(fp);
+	free(cache);
 }
 
 
