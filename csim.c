@@ -172,10 +172,29 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 			}
 
 			if (NULL/* WE HAVE A HIT */) {
-
+				//increment misses
+				if (NULL /* line is empty */) {
+					// set to valid
+					// put the valid one in here
+					// timestam
+				}
+				//need to kick this out if the set is full
+				else if (NULL /* line is not empty*/) {
+					// lets kick out this element i in the set
+					// set up eviction stuff
+					// increment eviction
+				}
 			}
 		}		
+		if (NULL /*instru == 'M'*/) {
+			// increment hits
+			// M is always a hit
+		}
 
+		if (NULL /*verbosity mode activated*/) {
+			// do all the printing stuff
+			//
+		}
 	}	
 	
 	printf("%lu\n", sizeof(cache));
