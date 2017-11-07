@@ -28,7 +28,8 @@ typedef struct {
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
-Cache createCache(int num_sets, int block_size, int lines_per_set);
+void createCache(Cache *cache, int num_sets, int block_size, int lines_per_set);
+FILE* openFile(char* trace_file);
 
 /**
  * Prints out a reminder of how to run the program.
@@ -127,6 +128,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	int hit_count = 0;
 	int miss_count = 0;
 	int eviction_count = 0;
+	int size;
+	char instr;
+	mem_addr addr;
 
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
@@ -135,18 +139,31 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	printf("Block Size %d\n", block_size);
 	printf("Lines Per Set %d\n", lines_per_set);
 
+	Cache *cache = malloc(sizeof(Cache));
+	createCache(cache, num_sets, block_size, lines_per_set);
+
+	FILE *fp = openFile(trace_file);
+	
+	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
+	}	
+	
+	printf("%lu\n", sizeof(cache));
+    printSummary(hit_count, miss_count, eviction_count);
+}
+/**
+ * Open a file and return a poniter to it
+ * Has logic to exit program if file does not exist
+ *
+ * @param trace_file The file to read/write from
+ */
+FILE* openFile(char* trace_file) {
 	FILE *fp = fopen(trace_file, "r");
   	if ((fp) == NULL) {
 		printf("No such file\n");
-		exit(1);
+	//	exit(1);
+		return fp;
 	}	
-	
-	Cache cache = createCache(num_sets, block_size, lines_per_set);
-	
-	printf("%lu\n", sizeof(cache));
-	//test the cache creation 
-	// Create function 
-    printSummary(hit_count, miss_count, eviction_count);
+	return fp;
 }
 
 /**
@@ -158,28 +175,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
  * @param block_size Number of bytes in each cache block.
  * @param lines_per_set Number of lines in each cache set.
  */
-Cache createCache(int num_sets, int block_size, int lines_per_set) {
-	Cache cache;
-	cache.sets = malloc(sizeof(Set) * num_sets);
+void createCache(Cache *cache, int num_sets, int block_size, int lines_per_set) {
+	cache->sets = malloc(num_sets * sizeof(Set));
 	for (int i = 0; i < num_sets; i++) {
-		cache.sets[i].lines = malloc(lines_per_set * sizeof(Line));
+		cache->sets[i].lines = malloc(lines_per_set * sizeof(Line));
 	}
-	return cache;
 }
-
-/*
-typedef struct {
-	unsigned int valid;
-	mem_addr tag;
-} Line;
-
-typedef struct {
-	int set_index;
-	int lru;	
-	Line* lines;
-} Set;
-
-typedef struct {
-	Set* sets;
-} Cache;
-*/
