@@ -17,6 +17,7 @@ typedef unsigned long int mem_addr;
 typedef struct {
 	unsigned int valid;
 	mem_addr tag;
+	int timestamp;
 } Line;
 
 typedef struct {
@@ -136,6 +137,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	char instr;
 	mem_addr addr;
 	int empty = -1;
+	int hit = 0;
+	int TSTAMP = 0;
+	int eviction = 0;
 
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
@@ -152,58 +156,65 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	printf("trace file read");
 
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		//int to_evict = 0;
+		int to_evict = 0;
 		if(instr != 'I') { //we don't do anything if the instruction is 'I'
 			// calculate the address tag and set index
-			//mem_addr addr_tag = addr >> (num_sets + block_size);
-			//int tag_size = (64 - (num_sets + block_size));
-			//unsigned long long temp_addr = addr << (tag_size);
-			//unsigned long long set_id = temp_addr >> (tag_size + block_size);
-			//Set set = cache->sets[set_id];
-			//int low = INT_MAX; // limits.h	
+			mem_addr addr_tag = addr >> (num_sets + block_size);
+			int tag_size = (64 - (num_sets + block_size));
+			unsigned long int temp_addr = addr << (tag_size);
+			unsigned long int set_id = temp_addr >> (tag_size + block_size);
+			Set set = cache->sets[set_id];
+			int low = INT_MAX; // limits.h	
 
 			for(int i = 0; i < lines_per_set; i++) {
-				if (NULL/* the set we are in is valid*/) {
-					if (NULL/* check if tag is a hit */){
-						// check if tag is a hit
-						// increment hit count
-						// maybe something else
-						// update the timestamp for LRU
-						// WE HAVE A HIT
+				if (set.lines[i].valid == 1/* the set we are in is valid*/) {
+					if (set.lines[i].tag == addr_tag) /* check if tag is a hit */{
+						hit_count++;
+						hit = 1;			
+						set.lines[i].timestamp = TSTAMP; 
+						TSTAMP++;
 					}
-					else if (NULL/*check if least recently used*/) {
-						// set this one to least recently used
-						// set this one to evict
+					else if (set.lines[i].timestamp < low)/*check if least recently used*/ {
+						low = set.lines[i].timestamp; // set this one to least recently used
+						to_evict = i; // set this one to evict
 					}
 				}
+				// if not empty, set the empty one that we found
 				else if (empty == -1) {
 					empty = i;
 				}
 			}
 
-			if (NULL/* WE HAVE A HIT */) {
-				//increment misses
-				if (NULL /* line is empty */) {
-					// set to valid
-					// put the valid one in here
-					// timestam
+			if (hit != 1){ //if we have a miss
+				miss_count++; //increment misses
+				if (empty > -1)/* line is empty */ {
+					set.lines[empty].valid = 1; // set to valid
+					set.lines[empty].tag = addr_tag; // put the valid one in here
+					set.lines[empty].timestamp = TSTAMP; // put the valid one in here
+					TSTAMP++;
 				}
 				//need to kick this out if the set is full
-				else if (NULL /* line is not empty*/) {
-					// lets kick out this element i in the set
-					// set up eviction stuff
-					// increment eviction
+				else if (empty < 0) /* line is not empty*/ {
+					eviction = 1;		
+					set.lines[to_evict].tag = addr_tag;
+					set.lines[to_evict].timestamp = TSTAMP;
+					TSTAMP++;
+					eviction_count++;
 				}
 			}
-		}		
-		if (NULL /*instru == 'M'*/) {
-			// increment hits
-			// M is always a hit
-		}
+			if (NULL /*instru == 'M'*/) {
+				// increment hits
+				// M is always a hit
+			}
+			////////////////
 
-		if (NULL /*verbosity mode activated*/) {
-			// do all the printing stuff
-			//
+			if (NULL /*verbosity mode activated*/) {
+				// do all the printing stuff
+				//
+			}
+			empty = -1;
+			hit = 0;
+			eviction = 0;
 		}
 	}	
 	
