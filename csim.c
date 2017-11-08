@@ -149,16 +149,18 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	createCache(cache, num_sets, block_size, lines_per_set);
 
 	FILE *fp = openFile(trace_file);
-	
+	printf("trace file read");
+
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		int to_evict = 0;
+		//int to_evict = 0;
 		if(instr != 'I') { //we don't do anything if the instruction is 'I'
 			// calculate the address tag and set index
-			mem_addr addr_tag = addr >> (num_sets + block_size);
-			int tag_size = (64 - (num_sets + block_size));
-			unsigned long long temp_addr = addr << (tag_size);
-			unsigned long long set_id = temp_addr >> (tag_size + block_size);
-			int low = INT_MAX; // limits.h	
+			//mem_addr addr_tag = addr >> (num_sets + block_size);
+			//int tag_size = (64 - (num_sets + block_size));
+			//unsigned long long temp_addr = addr << (tag_size);
+			//unsigned long long set_id = temp_addr >> (tag_size + block_size);
+			//Set set = cache->sets[set_id];
+			//int low = INT_MAX; // limits.h	
 
 			for(int i = 0; i < lines_per_set; i++) {
 				if (NULL/* the set we are in is valid*/) {
