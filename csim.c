@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 				// specify the number of sets
 				// Note: optarg is set by getopt to the string that follows
 				// this option (e.g. "-s 2" would assign optarg to the string "2")
-				num_sets = 1 << strtol(optarg, NULL, 10);
+				num_sets = 1 << strtol(optarg, NULL, 10); // = Big S
 				break;
 			case 'E':
 				// specify number of lines per set		
@@ -75,7 +75,8 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'b':
 				// specify the number of block bits	
-				//block_size = 1 << strtol(optarg, NULL, 10);
+				block_size = 1 << strtol(optarg, NULL, 10); // = Big B 
+
 				break;
 			case 't':
 				// specify the trace filename
@@ -148,8 +149,8 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	FILE *fp = openFile(trace_file);
 	
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		int to_evict = 0;
-		if(instr != 'I') { //we don't do anything if the instructio is 'I'
+		//int to_evict = 0;
+		if(instr != 'I') { //we don't do anything if the instruction is 'I'
 			//calculate the address tag and set index
 			//
 			for(int i = 0; i < lines_per_set; i++) {
