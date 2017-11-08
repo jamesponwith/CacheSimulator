@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 #include "cachelab.h"
 
 //typedef struct Line Line;
@@ -134,6 +135,7 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	int size;
 	char instr;
 	mem_addr addr;
+	int empty = -1;
 
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
@@ -149,10 +151,15 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	FILE *fp = openFile(trace_file);
 	
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		//int to_evict = 0;
+		int to_evict = 0;
 		if(instr != 'I') { //we don't do anything if the instruction is 'I'
-			//calculate the address tag and set index
-			//
+			// calculate the address tag and set index
+			mem_addr addr_tag = addr >> (num_sets + block_size);
+			int tag_size = (64 - (num_sets + block_size));
+			unsigned long long temp_addr = addr << (tag_size);
+			unsigned long long set_id = temp_addr >> (tag_size + block_size);
+			int low = INT_MAX; // limits.h	
+
 			for(int i = 0; i < lines_per_set; i++) {
 				if (NULL/* the set we are in is valid*/) {
 					if (NULL/* check if tag is a hit */){
@@ -167,8 +174,8 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 						// set this one to evict
 					}
 				}
-				else if (NULL /* empty == -1 */) {
-					//empty = i
+				else if (empty == -1) {
+					empty = i;
 				}
 			}
 
