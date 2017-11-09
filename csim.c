@@ -34,9 +34,12 @@ void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per
 void createCache(Cache *cache, int num_sets, int lines_per_set);
 void freeCache(Cache *cache, int num_sets, int block_seize, int lines_per_set); 
 
-void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int lines_per_set);
-void checkIfValid(Cache *cache, int *hit_count, int *hit, int set_index, int *LRU, int lines_per_set, int tag);
-void caseIfNotValid(Cache *cache, int *miss_count, int *eviction_count, int *eviction, int *LRU, int lines_per_set, int set_index, int tag);
+void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, int *hit_count, int *miss_count, int *eviction_count);   
+
+int isValid(Cache *cache, int lines_per_set, int set_index, int *line_index); 
+int tagMatches(Cache *cache, int set_index, int tag, int valid_line);
+
+void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int num_sets);
 
 void printVerbose(int verbose, char instr, mem_addr addr, int size, int hit, int eviction); 
 FILE* openFile(char* trace_file);
@@ -52,9 +55,9 @@ void usage(char *executable_name) {
 
 int main(int argc, char *argv[]) {
 	int verbose_mode = 0;
-	int num_sets = 2;
-	int lines_per_set = 1;
-	int block_size = 1;
+	int num_sets = -1;
+	int lines_per_set = -1;
+	int block_size = -1;
 	char *trace_filename = NULL;
 	
 	opterr = 0;
@@ -81,12 +84,11 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'E':
 				// specify number of lines per set		
-				//lines_per_set = strtol(optarg, NULL, 10);
+				lines_per_set = strtol(optarg, NULL, 10);
 				break;
 			case 'b':
 				// specify the number of block bits	
 				block_size = 1 << strtol(optarg, NULL, 10); // = Big B 
-
 				break;
 			case 't':
 				// specify the trace filename
@@ -98,6 +100,7 @@ int main(int argc, char *argv[]) {
 				exit(1);
 		}
 	}
+	// check valid inputs
 
 	// TODO: When you are ready to start using the user defined options, you
 	// should add some code here that makes sure they have actually specified
@@ -133,7 +136,7 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	int eviction_count = 0;
 
 	// Variables for reading in the lines	
-	char instr;
+	char instr[2];
 	mem_addr addr = 0;
 	int size;
 
@@ -145,115 +148,89 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	Cache *cache = malloc(sizeof(Cache));
 	createCache(cache, num_sets, lines_per_set);
 	
-	int hit = 0;
-	//int empty = -1;
-	int eviction = 0;
 	mem_addr tag = 0;
 	int set_index = 0;
 	int block = 0;
 	int LRU = lines_per_set;	
 
 	FILE *fp = openFile(trace_file);
-	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		if(instr == 'I')
+	while(fscanf(fp, "%s %lx,%d", instr, &addr, &size) == 3) {
+		if(instr[0] == 'I') {
 			continue;
+		}
+		getLineInfo(addr, &tag, &set_index, &block, block_size, num_sets);
+		// we have looped through all lines in set
+		// none are valid, so we need hava  mixx
+		// now we either evict and place, or just place, 
 
-		getLineInfo(addr, &tag, &set_index, &block, block_size, lines_per_set);
-
-		switch(instr) {
+		switch(instr[0]) {
 			case 'L':
+				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
 				//call onece 
 				break;
 			case 'S':
+				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
 				//call once
 				break;
 			case 'M':
-				//call twice
+				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
+				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
 				break;
 			default:
 				break;
 		}
-		if (instr == 'L') {
-
-		}
-
-		if (instr == 'S') {
-
-		}
-
-		if (instr == 'M') {
-
-		}
-		// get the set index, block offset, and tag
-		checkIfValid(cache, &hit_count, &hit, set_index, &LRU, lines_per_set, tag);
-
-		//not valid, go by LRU
-		
-		if (hit == 0) {
-			caseIfNotValid(cache, &miss_count, &eviction_count, &eviction, &LRU, lines_per_set, set_index, tag);
-		}
-		if (instr == 'M') {
-			checkIfValid(cache, &hit_count, &hit, set_index, &LRU, lines_per_set, tag);
-		}
-
-		printVerbose(verbose, instr, addr, size, hit, eviction);
-		//empty = -1;
-		hit = 0;
-		eviction = 0;
 	}	
-	//printf("%lu\n", sizeof(cache));
     printSummary(hit_count, miss_count, eviction_count);
 	fclose(fp);
 	freeCache(cache, num_sets, block_size, lines_per_set);
 }
-
-void caseIfNotValid(Cache *cache, int *miss_count, int *eviction_count, int *eviction, int *LRU, int lines_per_set, int set_index, int tag){
-	int lru_index = 0; //index to evict  
-	int min = cache->sets[set_index].lines[0].lru; 
-	for (int i = 1; i < lines_per_set; i++) {
-		if (cache->sets[set_index].lines[i].lru < min) {
-			min = cache->sets[set_index].lines[i].lru; 
-			lru_index = i;
-		}
-	}	
-	if (cache->sets[set_index].lines[lru_index].valid == 1) {
-		*eviction_count += 1;
-		*eviction = 1;
-	}
-	cache->sets[set_index].lines[lru_index].tag = tag;
-	cache->sets[set_index].lines[lru_index].lru = *LRU;
-	cache->sets[set_index].lines[lru_index].valid = 1;
-	*miss_count += 1;
-	*LRU += 1;
-}
-
-void checkIfValid(Cache *cache, int *hit_count, int *hit, int set_index, int *LRU, int lines_per_set, int tag){
-	for (int i = 0; i < lines_per_set; i++) {
-		if (cache->sets[set_index].lines[i].valid == 1) {
-			if (cache->sets[set_index].lines[i].tag == tag) {
-				*hit_count += 1;
-				*hit = 1;
-				cache->sets[set_index].lines[i].lru = *LRU;
-				*LRU++ += 1;
-				return;
+void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, int *hit_count, int *miss_count, int *eviction_count) {  
+		int hit = 0;
+		int miss = 0;
+		int eviction = 0;
+		for (int i = 0; i < lines_per_set; i++) {
+			if (cache->sets[set_index].lines[i].valid == 1) {
+				if (cache->sets[set_index].lines[i].tag == tag) {
+					hit += 1;
+					*hit_count += 1;
+					cache->sets[set_index].lines[i].lru = *LRU;
+					*LRU += 1;
+					break;
+				}
 			}
 		}
-	}
+		if (hit == 0) {
+			miss += 1;
+			*miss_count += 1;
+			int min = INT_MAX;
+			for (int i = 0; i < lines_per_set; i++) {
+				if (cache->sets[set_index].lines[i].lru < min) {
+					min = i;
+				}
+			}
+			if (cache->sets[set_index].lines[min].valid != 0) {
+				eviction += 1;
+				eviction_count += 1;
+			}
+			cache->sets[set_index].lines[min].tag = tag;
+			cache->sets[set_index].lines[min].valid = 1;
+			cache->sets[set_index].lines[min].lru = *LRU;
+			*LRU += 1;
+		}
 }
-
-void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int lines_per_set) {
+/**
+ * Gets the tag, set_index and block offset of the valgrind instruction
+ */ 
+void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int num_sets) {
 	int block_bits = log(block_size) / log(2);
-	int set_bits = log(lines_per_set) / log(2);
+	int set_bits = log(num_sets) / log(2);
 	int tag_bits = 64 - (block_bits + set_bits);
 
-	//claculate the tag
 	*tag = addr >> (set_bits + block_bits);
-	int temp = addr << tag_bits;
+	mem_addr temp = addr << tag_bits;
 	*set_index = temp >> (tag_bits + block_bits);
-	//*set_index = (addr << tag_bits) >> (tag_bits + block_bits);
 	temp = addr << (tag_bits + set_bits);
 	*block = temp >> (tag_bits + set_bits);
-	//*block = (addr << tag_bits + set_bits) >> (tag_bits + set_bits);
 }
 
 /**
@@ -272,7 +249,6 @@ void createCache(Cache *cache, int num_sets, int lines_per_set) {
 		for (int j = 0; j < lines_per_set; j++) {
 			//set up lru super arbitrarily
 			cache->sets[i].lines[j].lru = j;
-			cache->sets[i].lines[j].tag = 0;
 		}	
 	}
 }
@@ -300,20 +276,3 @@ FILE* openFile(char* trace_file) {
 	printf("trace file read\n");	
 	return fp;
 }
-
-void printVerbose(int verbose, char instr, mem_addr addr, int size, int hit, int eviction) {
-	if (verbose != 1) {
-		return;
-	}
-	printf("%c %lx,%d ", instr, addr, size);
-	if (hit == 1) {
-	   printf("hit ");
-   	}
-	else {
-		printf("miss ");
-   	}
-	if (eviction == 1) {
-	   	printf("eviction ");
-   	}
-	printf("\n");
-}	
