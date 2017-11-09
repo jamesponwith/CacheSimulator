@@ -199,7 +199,7 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 				}
 			}
 		}
-		if (hit == 0) {
+		if (hit < 1 ) {
 			miss += 1;
 			*miss_count += 1;
 			int min = INT_MAX;
@@ -210,7 +210,7 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 			}
 			if (cache->sets[set_index].lines[min].valid != 0) {
 				eviction += 1;
-				eviction_count += 1;
+				*eviction_count += 1;
 			}
 			cache->sets[set_index].lines[min].tag = tag;
 			cache->sets[set_index].lines[min].valid = 1;
