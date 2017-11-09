@@ -34,14 +34,12 @@ void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per
 void createCache(Cache *cache, int num_sets, int lines_per_set);
 void freeCache(Cache *cache, int num_sets, int block_seize, int lines_per_set); 
 
-void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, int *hit_count, int *miss_count, int *eviction_count);   
+void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, 
+		int *LRU, int *hit_count, int *miss_count, int *eviction_count);   
 
-int isValid(Cache *cache, int lines_per_set, int set_index, int *line_index); 
-int tagMatches(Cache *cache, int set_index, int tag, int valid_line);
+void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, 
+		int *block, int block_size, int num_sets);
 
-void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int num_sets);
-
-void printVerbose(int verbose, char instr, mem_addr addr, int size, int hit, int eviction); 
 FILE* openFile(char* trace_file);
 
 /**
@@ -165,16 +163,20 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 
 		switch(instr[0]) {
 			case 'L':
-				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
+				cacheOp(cache, lines_per_set, set_index, tag, 
+						&LRU, &hit_count, &miss_count, &eviction_count);
 				//call onece 
 				break;
 			case 'S':
-				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
+				cacheOp(cache, lines_per_set, set_index, tag, 
+						&LRU, &hit_count, &miss_count, &eviction_count);
 				//call once
 				break;
 			case 'M':
-				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
-				cacheOp(cache, lines_per_set, set_index, tag, &LRU, &hit_count, &miss_count, &eviction_count);
+				cacheOp(cache, lines_per_set, set_index, tag, 
+						&LRU, &hit_count, &miss_count, &eviction_count);
+				cacheOp(cache, lines_per_set, set_index, tag, 
+						&LRU, &hit_count, &miss_count, &eviction_count);
 				break;
 			default:
 				break;
@@ -189,6 +191,7 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 		int miss = 0;
 		int eviction = 0;
 		for (int i = 0; i < lines_per_set; i++) {
+			//printf("line %d\n", i);
 			if (cache->sets[set_index].lines[i].valid == 1) {
 				if (cache->sets[set_index].lines[i].tag == tag) {
 					hit += 1;
@@ -203,18 +206,20 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 			miss += 1;
 			*miss_count += 1;
 			int min = INT_MAX;
+			int to_evict = 0;
 			for (int i = 0; i < lines_per_set; i++) {
 				if (cache->sets[set_index].lines[i].lru < min) {
-					min = i;
+					min = cache->sets[set_index].lines[i].lru;
+					to_evict = i;
 				}
 			}
-			if (cache->sets[set_index].lines[min].valid != 0) {
+			if (cache->sets[set_index].lines[to_evict].valid == 1) {
 				eviction += 1;
 				*eviction_count += 1;
 			}
-			cache->sets[set_index].lines[min].tag = tag;
-			cache->sets[set_index].lines[min].valid = 1;
-			cache->sets[set_index].lines[min].lru = *LRU;
+			cache->sets[set_index].lines[to_evict].tag = tag;
+			cache->sets[set_index].lines[to_evict].valid = 1;
+			cache->sets[set_index].lines[to_evict].lru = *LRU;
 			*LRU += 1;
 		}
 }
@@ -247,8 +252,8 @@ void createCache(Cache *cache, int num_sets, int lines_per_set) {
 	for (int i = 0; i < num_sets; i++) {
 		cache->sets[i].lines = calloc(lines_per_set, sizeof(Line));
 		for (int j = 0; j < lines_per_set; j++) {
-			//set up lru super arbitrarily
 			cache->sets[i].lines[j].lru = j;
+			printf("Cache %d LRU: %d\n", i, cache->sets[i].lines[j].lru);
 		}	
 	}
 }
