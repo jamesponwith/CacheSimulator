@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
+#include <math.h>
 #include "cachelab.h"
 
 //typedef struct Line Line;
@@ -17,7 +18,7 @@ typedef unsigned long int mem_addr;
 typedef struct {
 	unsigned int valid;
 	mem_addr tag;
-	int timestamp;
+	int lru;
 } Line;
 
 typedef struct {
@@ -30,7 +31,14 @@ typedef struct {
 
 // forward declaration
 void simulateCache(char *trace_file, int num_sets, int block_size, int lines_per_set, int verbose);
-void createCache(Cache *cache, int num_sets, int block_size, int lines_per_set);
+void createCache(Cache *cache, int num_sets, int lines_per_set);
+void freeCache(Cache *cache, int num_sets, int block_seize, int lines_per_set); 
+
+void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int lines_per_set);
+void checkIfValid(Cache *cache, int *hit_count, int *hit, int set_index, int *LRU, int lines_per_set, int tag);
+void caseIfNotValid(Cache *cache, int *miss_count, int *eviction_count, int *eviction, int *LRU, int lines_per_set, int set_index, int tag);
+
+void printVerbose(int verbose, char instr, mem_addr addr, int size, int hit, int eviction); 
 FILE* openFile(char* trace_file);
 
 /**
@@ -101,15 +109,7 @@ int main(int argc, char *argv[]) {
 		printf("Number of sets: %d\n", num_sets);
 	}
 	
-	//simulateCache(trace_filename, num_sets, 2, li1, verbose_mode);
 	simulateCache(trace_filename, num_sets, block_size, lines_per_set, verbose_mode);
-	/**
-	 * Sets: 2
-	 * Lines: 1
-	 * Block: 2
-	 */
-	//simulateCache(trace_filename, 2, 2, 1, verbose_mode);
-	
     return 0;
 }
 
@@ -133,99 +133,157 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	int eviction_count = 0;
 
 	// Variables for reading in the lines	
-	int size;
 	char instr;
-	mem_addr addr;
-	int empty = -1;
-	int hit = 0;
-	int TSTAMP = 0;
-	int eviction = 0;
+	mem_addr addr = 0;
+	int size;
 
 	// TODO: This is where you will fill in the code to perform the actual
 	// cache simulation. Make sure you split your work into multiple functions
 	// so that each function is as simple as possible.
-	printf("Set Index Bits %d\n", num_sets);
-	printf("Block Size %d\n", block_size);
-	printf("Lines Per Set %d\n", lines_per_set);
-
+	
 	// Dynamically allocate space for the Cache object 
 	Cache *cache = malloc(sizeof(Cache));
-	createCache(cache, num_sets, block_size, lines_per_set);
+	createCache(cache, num_sets, lines_per_set);
+	
+	int hit = 0;
+	//int empty = -1;
+	int eviction = 0;
+	mem_addr tag = 0;
+	int set_index = 0;
+	int block = 0;
+	int LRU = lines_per_set;	
 
 	FILE *fp = openFile(trace_file);
-	printf("trace file read");
-
 	while(fscanf(fp, " %c %lx,%d", &instr, &addr, &size) == 3) {
-		int to_evict = 0;
-		if(instr != 'I') { //we don't do anything if the instruction is 'I'
-			// calculate the address tag and set index
-			mem_addr addr_tag = addr >> (num_sets + block_size);
-			int tag_size = (64 - (num_sets + block_size));
-			unsigned long int temp_addr = addr << (tag_size);
-			unsigned long int set_id = temp_addr >> (tag_size + block_size);
-			Set set = cache->sets[set_id];
-			int low = INT_MAX; // limits.h	
+		if(instr == 'I')
+			continue;
 
-			for(int i = 0; i < lines_per_set; i++) {
-				if (set.lines[i].valid == 1/* the set we are in is valid*/) {
-					if (set.lines[i].tag == addr_tag) /* check if tag is a hit */{
-						hit_count++;
-						hit = 1;			
-						set.lines[i].timestamp = TSTAMP; 
-						TSTAMP++;
-					}
-					else if (set.lines[i].timestamp < low)/*check if least recently used*/ {
-						low = set.lines[i].timestamp; // set this one to least recently used
-						to_evict = i; // set this one to evict
-					}
-				}
-				// if not empty, set the empty one that we found
-				else if (empty == -1) {
-					empty = i;
-				}
-			}
+		getLineInfo(addr, &tag, &set_index, &block, block_size, lines_per_set);
 
-			if (hit != 1){ //if we have a miss
-				miss_count++; //increment misses
-				if (empty > -1)/* line is empty */ {
-					set.lines[empty].valid = 1; // set to valid
-					set.lines[empty].tag = addr_tag; // put the valid one in here
-					set.lines[empty].timestamp = TSTAMP; // put the valid one in here
-					TSTAMP++;
-				}
-				//need to kick this out if the set is full
-				else if (empty < 0) /* line is not empty*/ {
-					eviction = 1;		
-					set.lines[to_evict].tag = addr_tag;
-					set.lines[to_evict].timestamp = TSTAMP;
-					TSTAMP++;
-					eviction_count++;
-				}
-			}
-			if (NULL /*instru == 'M'*/) {
-				// increment hits
-				// M is always a hit
-			}
-			////////////////
-
-			if (NULL /*verbosity mode activated*/) {
-				// do all the printing stuff
-				//
-			}
-			empty = -1;
-			hit = 0;
-			eviction = 0;
+		switch(instr) {
+			case 'L':
+				//call onece 
+				break;
+			case 'S':
+				//call once
+				break;
+			case 'M':
+				//call twice
+				break;
+			default:
+				break;
 		}
+		if (instr == 'L') {
+
+		}
+
+		if (instr == 'S') {
+
+		}
+
+		if (instr == 'M') {
+
+		}
+		// get the set index, block offset, and tag
+		checkIfValid(cache, &hit_count, &hit, set_index, &LRU, lines_per_set, tag);
+
+		//not valid, go by LRU
+		
+		if (hit == 0) {
+			caseIfNotValid(cache, &miss_count, &eviction_count, &eviction, &LRU, lines_per_set, set_index, tag);
+		}
+		if (instr == 'M') {
+			checkIfValid(cache, &hit_count, &hit, set_index, &LRU, lines_per_set, tag);
+		}
+
+		printVerbose(verbose, instr, addr, size, hit, eviction);
+		//empty = -1;
+		hit = 0;
+		eviction = 0;
 	}	
-	
-	printf("%lu\n", sizeof(cache));
+	//printf("%lu\n", sizeof(cache));
     printSummary(hit_count, miss_count, eviction_count);
 	fclose(fp);
-	free(cache);
+	freeCache(cache, num_sets, block_size, lines_per_set);
 }
 
+void caseIfNotValid(Cache *cache, int *miss_count, int *eviction_count, int *eviction, int *LRU, int lines_per_set, int set_index, int tag){
+	int lru_index = 0; //index to evict  
+	int min = cache->sets[set_index].lines[0].lru; 
+	for (int i = 1; i < lines_per_set; i++) {
+		if (cache->sets[set_index].lines[i].lru < min) {
+			min = cache->sets[set_index].lines[i].lru; 
+			lru_index = i;
+		}
+	}	
+	if (cache->sets[set_index].lines[lru_index].valid == 1) {
+		*eviction_count += 1;
+		*eviction = 1;
+	}
+	cache->sets[set_index].lines[lru_index].tag = tag;
+	cache->sets[set_index].lines[lru_index].lru = *LRU;
+	cache->sets[set_index].lines[lru_index].valid = 1;
+	*miss_count += 1;
+	*LRU += 1;
+}
 
+void checkIfValid(Cache *cache, int *hit_count, int *hit, int set_index, int *LRU, int lines_per_set, int tag){
+	for (int i = 0; i < lines_per_set; i++) {
+		if (cache->sets[set_index].lines[i].valid == 1) {
+			if (cache->sets[set_index].lines[i].tag == tag) {
+				*hit_count += 1;
+				*hit = 1;
+				cache->sets[set_index].lines[i].lru = *LRU;
+				*LRU++ += 1;
+				return;
+			}
+		}
+	}
+}
 
+void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, int *block, int block_size, int lines_per_set) {
+	int block_bits = log(block_size) / log(2);
+	int set_bits = log(lines_per_set) / log(2);
+	int tag_bits = 64 - (block_bits + set_bits);
+
+	//claculate the tag
+	*tag = addr >> (set_bits + block_bits);
+	int temp = addr << tag_bits;
+	*set_index = temp >> (tag_bits + block_bits);
+	//*set_index = (addr << tag_bits) >> (tag_bits + block_bits);
+	temp = addr << (tag_bits + set_bits);
+	*block = temp >> (tag_bits + set_bits);
+	//*block = (addr << tag_bits + set_bits) >> (tag_bits + set_bits);
+}
+
+/**
+ * Dynamically creates a cache with the specified organization (S, E, B)
+ * from the given inputs
+ *
+ * @param cache A pointer to a Cache struct
+ * @param num_sets Number of sets in the simulator.
+ * @param block_size Number of bytes in each cache block.
+ * @param lines_per_set Number of lines in each cache set.
+ */
+void createCache(Cache *cache, int num_sets, int lines_per_set) {
+	cache->sets = calloc(num_sets, sizeof(Set));
+	for (int i = 0; i < num_sets; i++) {
+		cache->sets[i].lines = calloc(lines_per_set, sizeof(Line));
+		for (int j = 0; j < lines_per_set; j++) {
+			//set up lru super arbitrarily
+			cache->sets[i].lines[j].lru = j;
+			cache->sets[i].lines[j].tag = 0;
+		}	
+	}
+}
+
+void freeCache(Cache *cache, int num_sets, int block_seize, int lines_per_set) {
+	for (int i = 0; i < num_sets; i++) {
+		free(cache->sets[i].lines);
+	}
+	free(cache->sets);
+	free(cache);
+}
 /**
  * Open a file and return a poniter to it
  * Has logic to exit program if file does not exist
@@ -238,22 +296,24 @@ FILE* openFile(char* trace_file) {
 		printf("No such file\n");
 		exit(1);
 		return fp;
-	}	
+	}
+	printf("trace file read\n");	
 	return fp;
 }
 
-/**
- * Dynamically creates a cache with the specified organization (S, E, B)
- * from the given inputs
- *
- * @param cache A pointer to a Cache struct
- * @param num_sets Number of sets in the simulator.
- * @param block_size Number of bytes in each cache block.
- * @param lines_per_set Number of lines in each cache set.
- */
-void createCache(Cache *cache, int num_sets, int block_size, int lines_per_set) {
-	cache->sets = calloc(num_sets, sizeof(Set));
-	for (int i = 0; i < num_sets; i++) {
-		cache->sets[i].lines = calloc(lines_per_set, sizeof(Line));
+void printVerbose(int verbose, char instr, mem_addr addr, int size, int hit, int eviction) {
+	if (verbose != 1) {
+		return;
 	}
-}
+	printf("%c %lx,%d ", instr, addr, size);
+	if (hit == 1) {
+	   printf("hit ");
+   	}
+	else {
+		printf("miss ");
+   	}
+	if (eviction == 1) {
+	   	printf("eviction ");
+   	}
+	printf("\n");
+}	
