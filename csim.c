@@ -154,11 +154,6 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 				for (int i = 0; i < 2; i++, 
 					cacheOp(cache, lines_per_set, set_index, tag, 
 						&LRU, &hit_count, &miss_count, &eviction_count));
-				//cacheOp(cache, lines_per_set, set_index, tag, 
-				//		&LRU, &hit_count, &miss_count, &eviction_count);
-				//cacheOp(cache, lines_per_set, set_index, tag, 
-			//			&LRU, &hit_count, &miss_count, &eviction_count);
-			//
 				break;
 			default:
 				break;
