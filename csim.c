@@ -38,7 +38,7 @@ FILE* openFile(char* trace_file);
 void createCache(Cache *cache, int num_sets, int lines_per_set);
 void freeCache(Cache *cache, int num_sets, int lines_per_set); 
 void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index,
-	   	int block_size, int num_sets);
+		int block_size, int num_sets);
 void simulateCache(char *trace_file, int num_sets, int block_size, 
 		int lines_per_set, int verbose);
 void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	int lines_per_set = -1;
 	int block_size = -1;
 	char *trace_filename = NULL;
-	
+
 	opterr = 0;
 	int c = -1;
 
@@ -102,9 +102,9 @@ int main(int argc, char *argv[]) {
 		printf("Trace filename: %s\n", trace_filename);
 		printf("Number of sets: %d\n", num_sets);
 	}
-	
+
 	simulateCache(trace_filename, num_sets, block_size, lines_per_set, verbose_mode);
-    return 0;
+	return 0;
 } // End main
 
 /*
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
  *   simulator is doing (1 = yes, 0 = no).
  */
 void simulateCache(char *trace_file, int num_sets, int block_size, 
-						int lines_per_set, int verbose) {
+		int lines_per_set, int verbose) {
 	// Variables to track how many hits, misses, and evictions we've had so
 	// far during simulation.
 	int hit_count = 0;
@@ -133,7 +133,7 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 
 	Cache *cache = malloc(sizeof(Cache));
 	createCache(cache, num_sets, lines_per_set);
-	
+
 	mem_addr tag = 0;
 	int set_index = 0;
 	int LRU = lines_per_set;	
@@ -143,9 +143,9 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 		if(instr[0] == 'I') {
 			continue;
 		}
-		
+
 		getLineInfo(addr, &tag, &set_index, block_size, num_sets);
-		
+
 		// Determines which command to execute 
 		switch(instr[0]) {
 			case 'L':
@@ -158,14 +158,14 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 				break;
 			case 'M':
 				for (int i = 0; i < 2; i++, 
-					cacheOp(cache, lines_per_set, set_index, tag, 
-						&LRU, &hit_count, &miss_count, &eviction_count));
+						cacheOp(cache, lines_per_set, set_index, tag, 
+							&LRU, &hit_count, &miss_count, &eviction_count));
 				break;
 			default:
 				break;
 		}
 	}	
-    printSummary(hit_count, miss_count, eviction_count);
+	printSummary(hit_count, miss_count, eviction_count);
 	fclose(fp);
 	freeCache(cache, num_sets, lines_per_set);
 }
@@ -186,40 +186,40 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
  * @param *eviction_count A pointer to the counter keeping track of evictions. 
  */ 
 void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, int *hit_count, int *miss_count, int *eviction_count) {  
-		int hit = 0;
-		int miss = 0;
-		int eviction = 0;
+	int hit = 0;
+	int miss = 0;
+	int eviction = 0;
+	for (int i = 0; i < lines_per_set; i++) {
+		if (cache->sets[set_index].lines[i].valid == 1) {
+			if (cache->sets[set_index].lines[i].tag == tag) {
+				hit += 1;
+				*hit_count += 1;
+				cache->sets[set_index].lines[i].lru = *LRU;
+				*LRU += 1;
+				break;
+			}
+		}
+	}
+	if (hit < 1 ) {
+		miss += 1;
+		*miss_count += 1;
+		int min = INT_MAX; // Set to maximum value so it will always be replaced. 
+		int to_evict = 0;
 		for (int i = 0; i < lines_per_set; i++) {
-			if (cache->sets[set_index].lines[i].valid == 1) {
-				if (cache->sets[set_index].lines[i].tag == tag) {
-					hit += 1;
-					*hit_count += 1;
-					cache->sets[set_index].lines[i].lru = *LRU;
-					*LRU += 1;
-					break;
-				}
+			if (cache->sets[set_index].lines[i].lru < min) {
+				min = cache->sets[set_index].lines[i].lru;
+				to_evict = i;
 			}
 		}
-		if (hit < 1 ) {
-			miss += 1;
-			*miss_count += 1;
-			int min = INT_MAX; // Set to maximum value so it will always be replaced. 
-			int to_evict = 0;
-			for (int i = 0; i < lines_per_set; i++) {
-				if (cache->sets[set_index].lines[i].lru < min) {
-					min = cache->sets[set_index].lines[i].lru;
-					to_evict = i;
-				}
-			}
-			if (cache->sets[set_index].lines[to_evict].valid == 1) {
-				eviction += 1;
-				*eviction_count += 1;
-			}
-			cache->sets[set_index].lines[to_evict].tag = tag;
-			cache->sets[set_index].lines[to_evict].valid = 1;
-			cache->sets[set_index].lines[to_evict].lru = *LRU;
-			*LRU += 1;
+		if (cache->sets[set_index].lines[to_evict].valid == 1) {
+			eviction += 1;
+			*eviction_count += 1;
 		}
+		cache->sets[set_index].lines[to_evict].tag = tag;
+		cache->sets[set_index].lines[to_evict].valid = 1;
+		cache->sets[set_index].lines[to_evict].lru = *LRU;
+		*LRU += 1;
+	}
 }
 
 /*
@@ -285,7 +285,7 @@ void freeCache(Cache *cache, int num_sets, int lines_per_set) {
  */
 FILE* openFile(char* trace_file) {
 	FILE *fp = fopen(trace_file, "r");
-  	if ((fp) == NULL) {
+	if ((fp) == NULL) {
 		printf("No such file\n");
 		exit(1);
 		return fp;
