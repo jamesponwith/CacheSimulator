@@ -3,6 +3,8 @@
  *
  * Fill in file header comment with your name(s) and a short paragraph about
  * what your program does.
+ * This program simulates the behavior of a cache, specified by the command
+ * line arguments. 
  */
 #include <ctype.h>
 #include <stdio.h>
@@ -140,7 +142,6 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 		}
 		
 		getLineInfo(addr, &tag, &set_index, block_size, num_sets);
-
 		switch(instr[0]) {
 			case 'L':
 				cacheOp(cache, lines_per_set, set_index, tag, 
@@ -168,7 +169,6 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 		int miss = 0;
 		int eviction = 0;
 		for (int i = 0; i < lines_per_set; i++) {
-			//printf("line %d\n", i);
 			if (cache->sets[set_index].lines[i].valid == 1) {
 				if (cache->sets[set_index].lines[i].tag == tag) {
 					hit += 1;
@@ -233,7 +233,13 @@ void createCache(Cache *cache, int num_sets, int lines_per_set) {
 		}	
 	}
 }
-
+/**
+ *
+ *
+ *
+ *
+ *
+ */
 void freeCache(Cache *cache, int num_sets, int lines_per_set) {
 	for (int i = 0; i < num_sets; i++) {
 		free(cache->sets[i].lines);
