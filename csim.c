@@ -1,10 +1,12 @@
 /*	
  * csim.c
  *
- * Fill in file header comment with your name(s) and a short paragraph about
- * what your program does.
+ * Patrick Hall and James Ponwith
+ * 
  * This program simulates the behavior of a cache, specified by the command
- * line arguments. 
+ * line arguments. This cache simulator is able to simulate the behavior of
+ * both a direct mapped cache and n-way set associative cache. 
+ *
  */
 #include <ctype.h>
 #include <stdio.h>
@@ -42,7 +44,7 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, 
 		int *LRU, int *hit_count, int *miss_count, int *eviction_count);   
 
-/**
+/*
  * Prints out a reminder of how to run the program.
  *
  * @param executable_name Strign containing the name of the executable.
@@ -105,7 +107,7 @@ int main(int argc, char *argv[]) {
     return 0;
 } // End main
 
-/**
+/*
  * Simulates cache with the specified organization (S, E, B) on the given
  * trace file.
  *
@@ -220,7 +222,7 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 		}
 }
 
-/**
+/*
  * Gets the tag, set_index and block offset of the valgrind instruction.
  *
  * @param addr Read in from the input file. Preform instruciton on this
@@ -241,7 +243,7 @@ void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index,
 	temp = addr << (tag_bits + set_bits);
 }
 
-/**
+/*
  * Dynamically creates a cache with the specified organization (S, E, B)
  * from the given inputs.
  *
@@ -260,7 +262,7 @@ void createCache(Cache *cache, int num_sets, int lines_per_set) {
 	}
 }
 
-/**
+/*
  * Frees all allocated memory to the cache and the lines within.  
  *
  * @param *cache A pointer to the Cache struct. 
@@ -291,3 +293,4 @@ FILE* openFile(char* trace_file) {
 	printf("trace file read\n");	
 	return fp;
 }
+
