@@ -200,8 +200,15 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 			*LRU += 1;
 		}
 }
+
 /**
- * Gets the tag, set_index and block offset of the valgrind instruction
+ * Gets the tag, set_index and block offset of the valgrind instruction.
+ *
+ * @param addr Read in from the input file. Preform instruciton on this
+ * address.
+ * @param *tag A pointer to the tag of the current address.
+ * @param *set_index A pointer to specify which set of the cache the address
+ * is located in.
  */ 
 void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, 
 		int block_size, int num_sets) {
@@ -217,9 +224,9 @@ void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index,
 
 /**
  * Dynamically creates a cache with the specified organization (S, E, B)
- * from the given inputs
+ * from the given inputs.
  *
- * @param cache A pointer to a Cache struct
+ * @param cache A pointer to a Cache struct.
  * @param num_sets Number of sets in the simulator.
  * @param block_size Number of bytes in each cache block.
  * @param lines_per_set Number of lines in each cache set.
@@ -233,12 +240,13 @@ void createCache(Cache *cache, int num_sets, int lines_per_set) {
 		}	
 	}
 }
+
 /**
+ * Frees all allocated memory to the cache and the lines within.  
  *
- *
- *
- *
- *
+ * @param *cache A pointer to the Cache struct. 
+ * @param num_sets Number of sets in the simulator.
+ * @param lines_per_set Number of lines in each cache set.  
  */
 void freeCache(Cache *cache, int num_sets, int lines_per_set) {
 	for (int i = 0; i < num_sets; i++) {
@@ -247,11 +255,12 @@ void freeCache(Cache *cache, int num_sets, int lines_per_set) {
 	free(cache->sets);
 	free(cache);
 }
+
 /**
- * Open a file and return a poniter to it
- * Has logic to exit program if file does not exist
+ * Open a file and return a poniter to it.
+ * Has logic to exit program if file does not exist.
  *
- * @param trace_file The file to read/write from
+ * @param trace_file The file to read/write from.
  */
 FILE* openFile(char* trace_file) {
 	FILE *fp = fopen(trace_file, "r");
