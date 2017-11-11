@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// If -v in command line arguement than execute.
 	if (verbose_mode) {
 		printf("Verbose mode enabled.\n");
 		printf("Trace filename: %s\n", trace_filename);
@@ -102,7 +103,7 @@ int main(int argc, char *argv[]) {
 	
 	simulateCache(trace_filename, num_sets, block_size, lines_per_set, verbose_mode);
     return 0;
-}
+} // End main
 
 /**
  * Simulates cache with the specified organization (S, E, B) on the given
@@ -142,6 +143,8 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 		}
 		
 		getLineInfo(addr, &tag, &set_index, block_size, num_sets);
+		
+		// Determines which command to execute 
 		switch(instr[0]) {
 			case 'L':
 				cacheOp(cache, lines_per_set, set_index, tag, 
@@ -164,6 +167,22 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
 	fclose(fp);
 	freeCache(cache, num_sets, lines_per_set);
 }
+
+/*
+ * Preforms the cache functionality based on the specified cache parameters
+ * provided by getLineInfo.
+ *  
+ * @param *cache A pointer to the Cache struct. 
+ * @param lines_per_set Specifies the amount of lines in each set of the
+ * cache.
+ * @param set_index Specifies which set the address is located in.
+ * @param tag Holds the tag value of the address read in from the file.
+ * @param *LRU A pointer to the counter incremening the LRU value to ensure
+ * the correct line is evicted.
+ * @param *hit_count A pointer to the counter keeping track of the hits.
+ * @param *miss_count A pointer to the counter keeping track of the misses.
+ * @param *eviction_count A pointer to the counter keeping track of evictions. 
+ */ 
 void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, int *hit_count, int *miss_count, int *eviction_count) {  
 		int hit = 0;
 		int miss = 0;
@@ -182,7 +201,7 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
 		if (hit < 1 ) {
 			miss += 1;
 			*miss_count += 1;
-			int min = INT_MAX;
+			int min = INT_MAX; // Set to maximum value so it will always be replaced. 
 			int to_evict = 0;
 			for (int i = 0; i < lines_per_set; i++) {
 				if (cache->sets[set_index].lines[i].lru < min) {
@@ -226,7 +245,7 @@ void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index,
  * Dynamically creates a cache with the specified organization (S, E, B)
  * from the given inputs.
  *
- * @param cache A pointer to a Cache struct.
+ * @param cache A pointer to the Cache struct.
  * @param num_sets Number of sets in the simulator.
  * @param block_size Number of bytes in each cache block.
  * @param lines_per_set Number of lines in each cache set.
