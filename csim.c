@@ -5,7 +5,7 @@
  * 
  * This program simulates the behavior of a cache, specified by the command
  * line arguments. This cache simulator is able to simulate the behavior of
- * both a direct mapped cache and n-way set associative cache. 
+ * both a direct mapped cache and n-way set associative cache.  
  *
  */
 #include <ctype.h>
@@ -33,7 +33,7 @@ typedef struct {
 	Set* sets;
 } Cache;
 
-// forward declaration
+// Forward function declarations
 FILE* openFile(char* trace_file);
 void createCache(Cache *cache, int num_sets, int lines_per_set);
 void freeCache(Cache *cache, int num_sets, int lines_per_set); 
@@ -176,11 +176,11 @@ void simulateCache(char *trace_file, int num_sets, int block_size,
  *  
  * @param *cache A pointer to the Cache struct. 
  * @param lines_per_set Specifies the amount of lines in each set of the
- * cache.
+ * 	 cache.
  * @param set_index Specifies which set the address is located in.
  * @param tag Holds the tag value of the address read in from the file.
  * @param *LRU A pointer to the counter incremening the LRU value to ensure
- * the correct line is evicted.
+ *   the correct line is evicted.
  * @param *hit_count A pointer to the counter keeping track of the hits.
  * @param *miss_count A pointer to the counter keeping track of the misses.
  * @param *eviction_count A pointer to the counter keeping track of evictions. 
@@ -226,10 +226,10 @@ void cacheOp(Cache *cache, int lines_per_set, int set_index, int tag, int *LRU, 
  * Gets the tag, set_index and block offset of the valgrind instruction.
  *
  * @param addr Read in from the input file. Preform instruciton on this
- * address.
+ *   address.
  * @param *tag A pointer to the tag of the current address.
  * @param *set_index A pointer to specify which set of the cache the address
- * is located in.
+ *   is located in.
  */ 
 void getLineInfo(mem_addr addr, mem_addr *tag, int *set_index, 
 		int block_size, int num_sets) {
