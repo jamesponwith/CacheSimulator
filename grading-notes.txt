@@ -1,2 +1,0 @@
-- James only seemed to have commits for comments. I am expecting a more equal
-  distribution of commits between group members next time.
